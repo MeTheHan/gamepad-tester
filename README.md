@@ -39,7 +39,7 @@
 ### 📜 TELİF HAKKI UYARISI
 **© 2026 MTechnoW - Tüm Hakları Saklıdır**
 
-Bu yazılım (Gamepad Tester) **MTechnoW** tarafından geliştirilmiştir. Yazılımın her hakkı saklıdır.
+Bu yazılım (Gamepad Tester) **MeTheHan** tarafından geliştirilmiştir. Yazılımın her hakkı saklıdır.
 
 ### 🚫 YASAKLANAN KULLANIMLAR
 Aşağıdaki kullanımlar **KESİNLİKLE YASAKTIR**:
@@ -71,7 +71,7 @@ Bu yazılımın izinsiz kullanımı durumunda:
 
 **Not:** Bu araç tamamen **ücretsiz** ve **kişisel kullanım** içindir. Lütfen telif haklarına saygı gösterin.
 
-**Geliştirici:** MTechnoW  
+**Geliştirici:** MeTheHan  
 **Platform:** GitHub Pages  
 **Erişim:** [methehan.github.io/gamepad-tester/](https://methehan.github.io/gamepad-tester/)  
 **İletişim:** [YouTube @MTechnoW](https://youtube.com/@MTechnoW)
