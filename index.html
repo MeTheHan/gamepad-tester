@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamepad Tester - Türkçe Oyun Kumandası Test Aracı</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --secondary: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+            --gray: #6b7280;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #c7d2fe;
+            margin-bottom: 30px;
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #93c5fd;
+            font-size: 1.5rem;
+        }
+
+        .card h2 i {
+            font-size: 1.8rem;
+        }
+
+        /* Gamepad Visualization */
+        .gamepad-visualization {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .gamepad-base {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            height: 220px;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 50% 50% 20% 20%;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stick {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            transition: all 0.1s;
+        }
+
+        .stick::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .stick-left { top: 40%; left: 35%; }
+        .stick-right { top: 40%; left: 65%; }
+
+        .button {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: var(--gray);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.1s;
+            user-select: none;
+        }
+
+        .button.pressed {
+            background: var(--success);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--success);
+        }
+
+        .face-button {
+            background: var(--dark);
+        }
+
+        .action-button {
+            background: var(--danger);
+        }
+
+        /* Button Grid */
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .btn-display {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 12px;
+            padding: 20px 15px;
+            text-align: center;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .btn-display.pressed {
+            background: var(--success);
+            border-color: var(--success);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-name {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            color: #c7d2fe;
+        }
+
+        .btn-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        /* Axis Display */
+        .axis-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .axis-bar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .axis-label {
+            min-width: 100px;
+            font-weight: bold;
+        }
+
+        .axis-visual {
+            flex: 1;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .axis-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 50%;
+            transform: translateX(-50%);
+            transition: width 0.1s;
+            position: relative;
+        }
+
+        .axis-center {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .axis-value {
+            min-width: 60px;
+            text-align: right;
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+
+        /* Deadzone Settings */
+        .deadzone-control {
+            margin-top: 20px;
+        }
+
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.3);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Vibration Test */
+        .vibration-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .vib-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .vib-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #c7d2fe;
+        }
+
+        /* Troubleshooting */
+        .troubleshooting {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 25px;
+            display: none;
+        }
+
+        .troubleshooting.show {
+            display: block;
+        }
+
+        .troubleshooting h3 {
+            color: #fca5a5;
+            margin-bottom: 15px;
+        }
+
+        .troubleshooting ul {
+            padding-left: 20px;
+        }
+
+        .troubleshooting li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .troubleshooting code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        /* Test Buttons */
+        .test-buttons {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .test-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .test-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .test-btn.primary {
+            background: var(--primary);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        /* Connection Status */
+        #connectionStatus {
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .connected {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border: 2px solid var(--success);
+        }
+
+        .disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border: 2px solid var(--danger);
+        }
+
+        /* Instructions */
+        .instructions {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #93c5fd;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .gamepad-visualization {
+                height: 300px;
+            }
+            
+            .gamepad-base {
+                width: 280px;
+                height: 180px;
+            }
+        }
+
+        /* Console Output */
+        #consoleOutput {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        #consoleOutput.show {
+            display: block;
+        }
+
+        .console-line {
+            margin-bottom: 5px;
+            color: #86efac;
+        }
+
+        .console-error {
+            color: #fca5a5;
+        }
+
+        .console-warning {
+            color: #fcd34d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-gamepad"></i> Gamepad Tester</h1>
+            <p class="subtitle">Bluetooth veya USB ile bağladığınız oyun kumandalarını test edin, deadzone ayarlarını görün</p>
+            
+            <div id="connectionStatus" class="disconnected">
+                <i class="fas fa-times-circle"></i> Kumanda Bağlı Değil
+            </div>
+
+            <div class="test-buttons">
+                <button class="test-btn primary" id="forceDetectBtn">
+                    <i class="fas fa-search"></i> Gamepad'i Zorla Algıla
+                </button>
+                <button class="test-btn" id="showConsoleBtn">
+                    <i class="fas fa-terminal"></i> Konsolu Göster
+                </button>
+                <button class="test-btn" id="manualTestBtn">
+                    <i class="fas fa-keyboard"></i> Manuel Test Modu
+                </button>
+            </div>
+        </header>
+
+        <div id="consoleOutput"></div>
+
+        <div class="troubleshooting" id="troubleshootingSection">
+            <h3><i class="fas fa-tools"></i> Sorun Giderme</h3>
+            <ul>
+                <li><strong>1. Tarayıcı Desteği:</strong> Chrome, Edge veya Firefox kullanın. Safari'de Gamepad API desteği sınırlıdır.</li>
+                <li><strong>2. HTTPS Bağlantısı:</strong> Bu sayfayı HTTPS üzerinden açın veya <code>localhost</code>'tan çalıştırın.</li>
+                <li><strong>3. Gamepad'i Etkinleştir:</strong> Gamepad bağlıyken <strong>herhangi bir butona basın</strong>.</li>
+                <li><strong>4. Tarayıcı Ayarları:</strong> Chrome'da <code>chrome://flags/#enable-gamepad-button-axis-events</code> adresine giderek Gamepad desteğini etkinleştirin.</li>
+                <li><strong>5. Sürücüler:</strong> Gamepad sürücülerinizin güncel olduğundan emin olun.</li>
+            </ul>
+        </div>
+
+        <div class="status-card">
+            <div id="deviceInfo">
+                <h2><i class="fas fa-info-circle"></i> Cihaz Bilgileri</h2>
+                <p><strong>Durum:</strong> <span id="statusText">Bağlanmayı bekliyor...</span></p>
+                <p><strong>Cihaz ID:</strong> <span id="deviceId">-</span></p>
+                <p><strong>Bağlantı Tipi:</strong> <span id="connectionType">-</span></p>
+                <p><strong>Buton Sayısı:</strong> <span id="buttonCount">0</span></p>
+                <p><strong>Eksen Sayısı:</strong> <span id="axisCount">0</span></p>
+                <p><strong>Tarayıcı:</strong> <span id="browserInfo"></span></p>
+                <p><strong>API Durumu:</strong> <span id="apiStatus"></span></p>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Sol Stick -->
+            <div class="card">
+                <h2><i class="fas fa-compress-alt"></i> Sol Analog Stick</h2>
+                <div class="axis-container">
+                    <div class="axis-bar">
+                        <div class="axis-label">X Ekseni</div>
+                        <div class="axis-visual">
+                            <div class="axis-center"></div>
+                            <div id="leftXFill" class="axis-fill"></div>
+                        </div>
+                        <div id="leftXValue" class="axis-value">0.00</div>
+                    </div>
+                    <div class="axis-bar">
+                        <div class="axis-label">Y Ekseni</div>
+                        <div class="axis-visual">
+                            <div class="axis-center"></div>
+                            <div id="leftYFill" class="axis-fill"></div>
+                        </div>
+                        <div id="leftYValue" class="axis-value">0.00</div>
+                    </div>
+                </div>
+                <div class="deadzone-control">
+                    <div class="slider-label">
+                        <span>Deadzone: <span id="deadzoneValue">15</span>%</span>
+                        <span id="leftDeadzoneStatus" class="stat-label">Deadzone dışında</span>
+                    </div>
+                    <input type="range" id="deadzoneSlider" min="0" max="50" value="15">
+                </div>
+            </div>
+
+            <!-- Sağ Stick -->
+            <div class="card">
+                <h2><i class="fas fa-expand-alt"></i> Sağ Analog Stick</h2>
+                <div class="axis-container">
+                    <div class="axis-bar">
+                        <div class="axis-label">X Ekseni</div>
+                        <div class="axis-visual">
+                            <div class="axis-center"></div>
+                            <div id="rightXFill" class="axis-fill"></div>
+                        </div>
+                        <div id="rightXValue" class="axis-value">0.00</div>
+                    </div>
+                    <div class="axis-bar">
+                        <div class="axis-label">Y Ekseni</div>
+                        <div class="axis-visual">
+                            <div class="axis-center"></div>
+                            <div id="rightYFill" class="axis-fill"></div>
+                        </div>
+                        <div id="rightYValue" class="axis-value">0.00</div>
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Mutlak Değer</div>
+                        <div id="rightStickMagnitude" class="stat-value">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Açı</div>
+                        <div id="rightStickAngle" class="stat-value">0°</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Tetikler (Triggers) -->
+            <div class="card">
+                <h2><i class="fas fa-angle-double-up"></i> Tetikler (LT / RT)</h2>
+                <div class="axis-container">
+                    <div class="axis-bar">
+                        <div class="axis-label">LT (Sol Tetik)</div>
+                        <div class="axis-visual">
+                            <div id="ltFill" class="axis-fill" style="background: linear-gradient(90deg, #10b981, #34d399);"></div>
+                        </div>
+                        <div id="ltValue" class="axis-value">0.00</div>
+                    </div>
+                    <div class="axis-bar">
+                        <div class="axis-label">RT (Sağ Tetik)</div>
+                        <div class="axis-visual">
+                            <div id="rtFill" class="axis-fill" style="background: linear-gradient(90deg, #ef4444, #f87171);"></div>
+                        </div>
+                        <div id="rtValue" class="axis-value">0.00</div>
+                    </div>
+                </div>
+                <div class="vibration-controls">
+                    <button class="vib-btn" id="vibrateWeak">
+                        <i class="fas fa-vibrate"></i> Hafif Titreşim
+                    </button>
+                    <button class="vib-btn" id="vibrateStrong">
+                        <i class="fas fa-bolt"></i> Güçlü Titreşim
+                    </button>
+                </div>
+            </div>
+
+            <!-- Butonlar -->
+            <div class="card">
+                <h2><i class="fas fa-square"></i> Butonlar</h2>
+                <div class="buttons-grid" id="buttonsContainer">
+                    <!-- Butonlar JavaScript ile oluşturulacak -->
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Basılı Buton</div>
+                        <div id="pressedButtons" class="stat-value">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Son Tepki Süresi</div>
+                        <div id="responseTime" class="stat-value">0ms</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gamepad Görseli -->
+        <div class="card">
+            <h2><i class="fas fa-gamepad"></i> Canlı Görünüm</h2>
+            <div class="gamepad-visualization">
+                <div class="gamepad-base"></div>
+                <!-- Analog Stick'ler -->
+                <div id="leftStickVisual" class="stick stick-left"></div>
+                <div id="rightStickVisual" class="stick stick-right"></div>
+                
+                <!-- Yön Butonları (D-Pad) -->
+                <div id="btnUp" class="button" style="top: 70%; left: 35%;">↑</div>
+                <div id="btnDown" class="button" style="top: 85%; left: 35%;">↓</div>
+                <div id="btnLeft" class="button" style="top: 77.5%; left: 30%;">←</div>
+                <div id="btnRight" class="button" style="top: 77.5%; left: 40%;">→</div>
+                
+                <!-- Face Butonları -->
+                <div id="btnY" class="button face-button" style="top: 70%; left: 65%;">Y</div>
+                <div id="btnA" class="button face-button" style="top: 85%; left: 65%;">A</div>
+                <div id="btnX" class="button face-button" style="top: 77.5%; left: 60%;">X</div>
+                <div id="btnB" class="button face-button" style="top: 77.5%; left: 70%;">B</div>
+                
+                <!-- Action Butonları -->
+                <div id="btnLB" class="button action-button" style="top: 30%; left: 25%;">LB</div>
+                <div id="btnRB" class="button action-button" style="top: 30%; left: 75%;">RB</div>
+                <div id="btnLT" class="button action-button" style="top: 15%; left: 25%;">LT</div>
+                <div id="btnRT" class="button action-button" style="top: 15%; left: 75%;">RT</div>
+                
+                <!-- Special Butonları -->
+                <div id="btnStart" class="button" style="top: 50%; left: 60%; background: #8b5cf6;">Start</div>
+                <div id="btnSelect" class="button" style="top: 50%; left: 40%; background: #8b5cf6;">Select</div>
+            </div>
+        </div>
+
+        <!-- Kullanım Talimatları -->
+        <div class="instructions">
+            <h3><i class="fas fa-graduation-cap"></i> Bağlantı Problemi Çözümleri</h3>
+            <ul>
+                <li><strong>1. Butona Basın:</strong> Gamepad bağlıyken herhangi bir butona veya tetiğe basın.</li>
+                <li><strong>2. Chrome Kullanın:</strong> Chrome'da <code>chrome://gamepad</code> yazarak test edin.</li>
+                <li><strong>3. HTTP/HTTPS:</strong> Bu sayfayı <code>http://localhost</code>'ta açın veya HTTPS kullanın.</li>
+                <li><strong>4. Gamepad'i Çıkarıp Takın:</strong> USB gamepad'i çıkarıp yeniden takın.</li>
+                <li><strong>5. Bluetooth:</strong> Bluetooth gamepad için sistem ayarlarından eşleştirin.</li>
+                <li><strong>6. Farklı Port:</strong> USB portunu değiştirmeyi deneyin.</li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>Gamepad Tester v2.0 | Tüm gamepad'lerde çalışır (Xbox, PlayStation, Nintendo, Generic)</p>
+            <p>Not: Chrome v89+, Firefox v80+, Edge v89+ için en iyi deneyim. Safari'de sınırlı destek.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Gamepad değişkenleri
+        let gamepad = null;
+        let animationFrameId = null;
+        let deadzone = 0.15;
+        let lastUpdateTime = Date.now();
+        let pressedButtonsCount = 0;
+        let consoleLog = [];
+
+        // DOM elementleri
+        const connectionStatus = document.getElementById('connectionStatus');
+        const statusText = document.getElementById('statusText');
+        const deviceId = document.getElementById('deviceId');
+        const connectionType = document.getElementById('connectionType');
+        const buttonCount = document.getElementById('buttonCount');
+        const axisCount = document.getElementById('axisCount');
+        const browserInfo = document.getElementById('browserInfo');
+        const apiStatus = document.getElementById('apiStatus');
+        const troubleshootingSection = document.getElementById('troubleshootingSection');
+        const consoleOutput = document.getElementById('consoleOutput');
+
+        // Gamepad API kontrolü
+        function checkGamepadAPI() {
+            const hasGamepadAPI = 'getGamepads' in navigator;
+            apiStatus.textContent = hasGamepadAPI ? 'Mevcut ✓' : 'Desteklenmiyor ✗';
+            apiStatus.style.color = hasGamepadAPI ? '#10b981' : '#ef4444';
+            
+            return hasGamepadAPI;
+        }
+
+        // Tarayıcı bilgisi
+        function detectBrowser() {
+            const ua = navigator.userAgent;
+            let browser = "Bilinmeyen";
+            
+            if (ua.includes("Chrome") && !ua.includes("Edg")) browser = "Chrome";
+            else if (ua.includes("Firefox")) browser = "Firefox";
+            else if (ua.includes("Safari") && !ua.includes("Chrome")) browser = "Safari";
+            else if (ua.includes("Edg")) browser = "Edge";
+            
+            const versionMatch = ua.match(/(Chrome|Firefox|Safari|Edg)\/(\d+)/);
+            const version = versionMatch ? versionMatch[2] : "?";
+            
+            browserInfo.textContent = `${browser} v${version}`;
+            
+            // Safari'de uyarı göster
+            if (browser === "Safari") {
+                logToConsole("⚠️ Safari'de Gamepad API desteği sınırlıdır. Chrome veya Firefox önerilir.", "warning");
+                troubleshootingSection.classList.add('show');
+            }
+            
+            return browser;
+        }
+
+        // Konsola log ekle
+        function logToConsole(message, type = "info") {
+            const timestamp = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = `console-line ${type === 'error' ? 'console-error' : type === 'warning' ? 'console-warning' : ''}`;
+            line.textContent = `[${timestamp}] ${message}`;
+            consoleOutput.appendChild(line);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            
+            // Konsola da yaz
+            if (type === 'error') console.error(message);
+            else if (type === 'warning') console.warn(message);
+            else console.log(message);
+            
+            consoleLog.push({time: timestamp, message, type});
+        }
+
+        // Manuel gamepad tarama
+        function scanForGamepads() {
+            logToConsole("Gamepad taraması başlatıldı...");
+            
+            try {
+                const gamepads = navigator.getGamepads();
+                let found = false;
+                
+                for (let i = 0; i < gamepads.length; i++) {
+                    const gp = gamepads[i];
+                    if (gp) {
+                        found = true;
+                        logToConsole(`Gamepad ${i} bulundu: ${gp.id}`, "info");
+                        
+                        // Gamepad'i manuel olarak bağla
+                        if (!gamepad) {
+                            connectGamepad(gp, i);
+                        }
+                    }
+                }
+                
+                if (!found) {
+                    logToConsole("Hiçbir gamepad bulunamadı. Lütfen bir butona basın.", "warning");
+                    troubleshootingSection.classList.add('show');
+                    
+                    // Kullanıcıya mesaj göster
+                    statusText.textContent = "Gamepad bulunamadı. Lütfen bir butona basın.";
+                    statusText.style.color = "#f59e0b";
+                }
+                
+                return found;
+            } catch (error) {
+                logToConsole(`Tarama hatası: ${error.message}`, "error");
+                return false;
+            }
+        }
+
+        // Gamepad bağlantısı
+        function connectGamepad(gamepadObj, index) {
+            gamepad = gamepadObj;
+            
+            logToConsole(`Gamepad bağlandı: ${gamepad.id} (Index: ${index})`, "info");
+            
+            // UI güncelle
+            connectionStatus.className = 'connected';
+            connectionStatus.innerHTML = '<i class="fas fa-check-circle"></i> Kumanda Bağlı';
+            statusText.textContent = 'Bağlı ve çalışıyor';
+            statusText.style.color = '#10b981';
+            deviceId.textContent = gamepad.id;
+            connectionType.textContent = gamepad.mapping === 'standard' ? 'Standart (Xbox/PS)' : 'Özel Mapping';
+            buttonCount.textContent = gamepad.buttons.length;
+            axisCount.textContent = gamepad.axes.length;
+            
+            // Butonları oluştur
+            createButtons();
+            
+            // Sorun gidermeyi gizle
+            troubleshootingSection.classList.remove('show');
+            
+            // Animasyon döngüsünü başlat
+            if (!animationFrameId) {
+                updateGamepadData();
+            }
+        }
+
+        // Butonları oluştur
+        function createButtons() {
+            const container = document.getElementById('buttonsContainer');
+            container.innerHTML = '';
+            
+            const buttonNames = [
+                "A", "B", "X", "Y", "LB", "RB", "LT", "RT",
+                "Select", "Start", "L3", "R3", "Up", "Down",
+                "Left", "Right", "Home", "Capture"
+            ];
+            
+            for (let i = 0; i < 18; i++) {
+                const btnDiv = document.createElement('div');
+                btnDiv.className = 'btn-display';
+                btnDiv.id = `btnDisplay${i}`;
+                btnDiv.innerHTML = `
+                    <div class="btn-name">${buttonNames[i] || `B${i}`}</div>
+                    <div class="btn-value">0.00</div>
+                `;
+                container.appendChild(btnDiv);
+            }
+        }
+
+        // Gamepad verilerini güncelle
+        function updateGamepadData() {
+            if (!gamepad) {
+                // Gamepad kaybolduysa kontrol et
+                const gamepads = navigator.getGamepads();
+                let stillConnected = false;
+                
+                for (const gp of gamepads) {
+                    if (gp && gp.index === gamepad?.index) {
+                        stillConnected = true;
+                        gamepad = gp;
+                        break;
+                    }
+                }
+                
+                if (!stillConnected) {
+                    disconnectGamepad();
+                    return;
+                }
+            }
+            
+            // Gamepad'i güncelle (yeniden al)
+            const gamepads = navigator.getGamepads();
+            const currentGamepad = gamepads[gamepad.index];
+            
+            if (!currentGamepad) {
+                disconnectGamepad();
+                return;
+            }
+            
+            gamepad = currentGamepad;
+            
+            // Axis değerlerini güncelle
+            updateAxisData();
+            
+            // Buton değerlerini güncelle
+            updateButtonData();
+            
+            // İstatistikleri güncelle
+            updateStats();
+            
+            // Bir sonraki animasyon frame'i için planla
+            animationFrameId = requestAnimationFrame(updateGamepadData);
+        }
+
+        // Gamepad bağlantısı kesildi
+        function disconnectGamepad() {
+            gamepad = null;
+            
+            logToConsole("Gamepad bağlantısı kesildi", "warning");
+            
+            // UI güncelle
+            connectionStatus.className = 'disconnected';
+            connectionStatus.innerHTML = '<i class="fas fa-times-circle"></i> Kumanda Bağlı Değil';
+            statusText.textContent = 'Bağlanmayı bekliyor...';
+            statusText.style.color = '#ef4444';
+            
+            // Animasyonu durdur
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            
+            // Tüm değerleri sıfırla
+            resetAllValues();
+            
+            // Sorun gidermeyi göster
+            troubleshootingSection.classList.add('show');
+        }
+
+        // Tüm değerleri sıfırla
+        function resetAllValues() {
+            // Axis değerleri
+            document.getElementById('leftXValue').textContent = '0.00';
+            document.getElementById('leftYValue').textContent = '0.00';
+            document.getElementById('rightXValue').textContent = '0.00';
+            document.getElementById('rightYValue').textContent = '0.00';
+            document.getElementById('ltValue').textContent = '0.00';
+            document.getElementById('rtValue').textContent = '0.00';
+            
+            // Fill barları
+            document.getElementById('leftXFill').style.width = '50%';
+            document.getElementById('leftYFill').style.width = '50%';
+            document.getElementById('rightXFill').style.width = '50%';
+            document.getElementById('rightYFill').style.width = '50%';
+            document.getElementById('ltFill').style.width = '0%';
+            document.getElementById('rtFill').style.width = '0%';
+            
+            // Stick görselleri
+            document.getElementById('leftStickVisual').style.left = '35%';
+            document.getElementById('leftStickVisual').style.top = '40%';
+            document.getElementById('rightStickVisual').style.left = '65%';
+            document.getElementById('rightStickVisual').style.top = '40%';
+            
+            // İstatistikler
+            document.getElementById('rightStickMagnitude').textContent = '0.00';
+            document.getElementById('rightStickAngle').textContent = '0°';
+            document.getElementById('pressedButtons').textContent = '0';
+            
+            // Buton görselleri
+            for (let i = 0; i < 18; i++) {
+                const btnDisplay = document.getElementById(`btnDisplay${i}`);
+                if (btnDisplay) {
+                    btnDisplay.classList.remove('pressed');
+                    btnDisplay.querySelector('.btn-value').textContent = '0.00';
+                }
+            }
+            
+            // Gamepad görselindeki butonlar
+            ['Up', 'Down', 'Left', 'Right', 'Y', 'A', 'X', 'B', 'LB', 'RB', 'LT', 'RT', 'Start', 'Select'].forEach(btn => {
+                const visualBtn = document.getElementById(`btn${btn}`);
+                if (visualBtn) visualBtn.classList.remove('pressed');
+            });
+        }
+
+        // Axis verilerini güncelle
+        function updateAxisData() {
+            if (!gamepad) return;
+            
+            // Deadzone değerini al
+            deadzone = parseInt(document.getElementById('deadzoneSlider').value) / 100;
+            document.getElementById('deadzoneValue').textContent = (deadzone * 100).toFixed(0);
+            
+            // Axis değerleri
+            const axes = gamepad.axes || [];
+            const buttons = gamepad.buttons || [];
+            
+            const leftX = axes[0] || 0;
+            const leftY = axes[1] || 0;
+            const rightX = axes[2] || 0;
+            const rightY = axes[3] || 0;
+            const lt = buttons[6] ? buttons[6].value : 0;
+            const rt = buttons[7] ? buttons[7].value : 0;
+            
+            // Değerleri göster
+            document.getElementById('leftXValue').textContent = leftX.toFixed(2);
+            document.getElementById('leftYValue').textContent = leftY.toFixed(2);
+            document.getElementById('rightXValue').textContent = rightX.toFixed(2);
+            document.getElementById('rightYValue').textContent = rightY.toFixed(2);
+            document.getElementById('ltValue').textContent = lt.toFixed(2);
+            document.getElementById('rtValue').textContent = rt.toFixed(2);
+            
+            // Fill barlarını güncelle
+            document.getElementById('leftXFill').style.width = `${50 + leftX * 50}%`;
+            document.getElementById('leftYFill').style.width = `${50 + leftY * 50}%`;
+            document.getElementById('rightXFill').style.width = `${50 + rightX * 50}%`;
+            document.getElementById('rightYFill').style.width = `${50 + rightY * 50}%`;
+            document.getElementById('ltFill').style.width = `${lt * 100}%`;
+            document.getElementById('rtFill').style.width = `${rt * 100}%`;
+            
+            // Deadzone kontrolü
+            const leftMagnitude = Math.sqrt(leftX * leftX + leftY * leftY);
+            const deadzoneStatus = document.getElementById('leftDeadzoneStatus');
+            if (leftMagnitude < deadzone) {
+                deadzoneStatus.textContent = 'Deadzone içinde';
+                deadzoneStatus.style.color = '#ef4444';
+            } else {
+                deadzoneStatus.textContent = 'Deadzone dışında';
+                deadzoneStatus.style.color = '#10b981';
+            }
+            
+            // Stick görsellerini güncelle
+            document.getElementById('leftStickVisual').style.left = `${35 + leftX * 15}%`;
+            document.getElementById('leftStickVisual').style.top = `${40 + leftY * 15}%`;
+            document.getElementById('rightStickVisual').style.left = `${65 + rightX * 15}%`;
+            document.getElementById('rightStickVisual').style.top = `${40 + rightY * 15}%`;
+        }
+
+        // Buton verilerini güncelle
+        function updateButtonData() {
+            if (!gamepad) return;
+            
+            pressedButtonsCount = 0;
+            const now = Date.now();
+            const buttons = gamepad.buttons || [];
+            
+            // Tüm butonları kontrol et
+            for (let i = 0; i < buttons.length; i++) {
+                const button = buttons[i];
+                const btnDisplay = document.getElementById(`btnDisplay${i}`);
+                
+                if (btnDisplay) {
+                    const isPressed = button.pressed || button.value > 0.1;
+                    
+                    if (isPressed) {
+                        btnDisplay.classList.add('pressed');
+                        pressedButtonsCount++;
+                        
+                        // Tepki süresini güncelle
+                        const responseTimeElement = document.getElementById('responseTime');
+                        responseTimeElement.textContent = `${now - lastUpdateTime}ms`;
+                        lastUpdateTime = now;
+                    } else {
+                        btnDisplay.classList.remove('pressed');
+                    }
+                    
+                    // Buton değerini göster
+                    btnDisplay.querySelector('.btn-value').textContent = button.value.toFixed(2);
+                }
+                
+                // Gamepad görselindeki butonları güncelle
+                updateVisualButton(i, button);
+            }
+            
+            document.getElementById('pressedButtons').textContent = pressedButtonsCount;
+        }
+
+        // Gamepad görselindeki butonları güncelle
+        function updateVisualButton(buttonIndex, button) {
+            const buttonMap = {
+                0: 'A', 1: 'B', 2: 'X', 3: 'Y',
+                4: 'LB', 5: 'RB', 6: 'LT', 7: 'RT',
+                8: 'Select', 9: 'Start',
+                12: 'Up', 13: 'Down', 14: 'Left', 15: 'Right'
+            };
+            
+            const buttonName = buttonMap[buttonIndex];
+            if (!buttonName) return;
+            
+            const visualButton = document.getElementById(`btn${buttonName}`);
+            if (visualButton) {
+                const isPressed = button.pressed || button.value > 0.1;
+                visualButton.classList.toggle('pressed', isPressed);
+            }
+        }
+
+        // İstatistikleri güncelle
+        function updateStats() {
+            if (!gamepad) return;
+            
+            const axes = gamepad.axes || [];
+            const rightX = axes[2] || 0;
+            const rightY = axes[3] || 0;
+            
+            const magnitude = Math.sqrt(rightX * rightX + rightY * rightY);
+            let angle = Math.atan2(rightY, rightX) * (180 / Math.PI);
+            if (angle < 0) angle += 360;
+            
+            document.getElementById('rightStickMagnitude').textContent = magnitude.toFixed(2);
+            document.getElementById('rightStickAngle').textContent = `${Math.round(angle)}°`;
+        }
+
+        // Titreşim testi
+        function vibrateGamepad(duration, weakMotor, strongMotor) {
+            if (!gamepad) {
+                logToConsole("Titreşim için önce gamepad bağlayın", "warning");
+                return;
+            }
+            
+            if (!('vibrationActuator' in gamepad)) {
+                logToConsole("Bu gamepad titreşimi desteklemiyor", "warning");
+                return;
+            }
+            
+            try {
+                gamepad.vibrationActuator.playEffect("dual-rumble", {
+                    startDelay: 0,
+                    duration: duration,
+                    weakMagnitude: weakMotor,
+                    strongMagnitude: strongMotor
+                });
+                logToConsole(`${duration}ms titreşim testi başlatıldı`, "info");
+            } catch (error) {
+                logToConsole(`Titreşim hatası: ${error.message}`, "error");
+            }
+        }
+
+        // Manuel test modu
+        function startManualTest() {
+            logToConsole("Manuel test modu başlatıldı", "info");
+            alert("Manuel test modu: WASD ve ok tuşlarını kullanarak simülasyon yapabilirsiniz.");
+            
+            // Klavye kontrolleri
+            document.addEventListener('keydown', handleManualKeyDown);
+            document.addEventListener('keyup', handleManualKeyUp);
+            
+            // Simüle edilmiş gamepad
+            const simulatedGamepad = {
+                id: 'Manual Test Mode (Klavye)',
+                index: 0,
+                mapping: 'standard',
+                axes: [0, 0, 0, 0],
+                buttons: Array(18).fill({pressed: false, value: 0}),
+                vibrationActuator: {
+                    playEffect: () => {
+                        logToConsole("Demo titreşim çalıştırıldı", "info");
+                    }
+                }
+            };
+            
+            connectGamepad(simulatedGamepad, 0);
+        }
+
+        // Manuel klavye kontrolleri
+        function handleManualKeyDown(e) {
+            if (!gamepad) return;
+            
+            const axes = [...gamepad.axes];
+            const buttons = [...gamepad.buttons];
+            
+            switch(e.key.toLowerCase()) {
+                case 'w': axes[1] = -1; break;
+                case 's': axes[1] = 1; break;
+                case 'a': axes[0] = -1; break;
+                case 'd': axes[0] = 1; break;
+                case 'arrowup': buttons[12] = {pressed: true, value: 1}; break;
+                case 'arrowdown': buttons[13] = {pressed: true, value: 1}; break;
+                case 'arrowleft': buttons[14] = {pressed: true, value: 1}; break;
+                case 'arrowright': buttons[15] = {pressed: true, value: 1}; break;
+                case '1': buttons[0] = {pressed: true, value: 1}; break; // A
+                case '2': buttons[1] = {pressed: true, value: 1}; break; // B
+                case '3': buttons[2] = {pressed: true, value: 1}; break; // X
+                case '4': buttons[3] = {pressed: true, value: 1}; break; // Y
+            }
+            
+            gamepad.axes = axes;
+            gamepad.buttons = buttons;
+        }
+
+        function handleManualKeyUp(e) {
+            if (!gamepad) return;
+            
+            const axes = [...gamepad.axes];
+            const buttons = [...gamepad.buttons];
+            
+            switch(e.key.toLowerCase()) {
+                case 'w':
+                case 's': axes[1] = 0; break;
+                case 'a':
+                case 'd': axes[0] = 0; break;
+                case 'arrowup': buttons[12] = {pressed: false, value: 0}; break;
+                case 'arrowdown': buttons[13] = {pressed: false, value: 0}; break;
+                case 'arrowleft': buttons[14] = {pressed: false, value: 0}; break;
+                case 'arrowright': buttons[15] = {pressed: false, value: 0}; break;
+                case '1': buttons[0] = {pressed: false, value: 0}; break;
+                case '2': buttons[1] = {pressed: false, value: 0}; break;
+                case '3': buttons[2] = {pressed: false, value: 0}; break;
+                case '4': buttons[3] = {pressed: false, value: 0}; break;
+            }
+            
+            gamepad.axes = axes;
+            gamepad.buttons = buttons;
+        }
+
+        // Event listener'ları kur
+        function setupEventListeners() {
+            // Standart gamepad event'leri
+            window.addEventListener('gamepadconnected', (e) => {
+                logToConsole(`Gamepad otomatik bağlandı: ${e.gamepad.id}`, "info");
+                connectGamepad(e.gamepad, e.gamepad.index);
+            });
+            
+            window.addEventListener('gamepaddisconnected', () => {
+                logToConsole("Gamepad bağlantısı kesildi", "warning");
+                disconnectGamepad();
+            });
+            
+            // Manuel tarama butonu
+            document.getElementById('forceDetectBtn').addEventListener('click', () => {
+                logToConsole("Manuel tarama başlatıldı...", "info");
+                scanForGamepads();
+            });
+            
+            // Konsol göster/gizle
+            document.getElementById('showConsoleBtn').addEventListener('click', () => {
+                consoleOutput.classList.toggle('show');
+            });
+            
+            // Manuel test modu
+            document.getElementById('manualTestBtn').addEventListener('click', startManualTest);
+            
+            // Deadzone slider
+            document.getElementById('deadzoneSlider').addEventListener('input', updateAxisData);
+            
+            // Titreşim butonları
+            document.getElementById('vibrateWeak').addEventListener('click', () => {
+                vibrateGamepad(500, 0.5, 0.2);
+            });
+            
+            document.getElementById('vibrateStrong').addEventListener('click', () => {
+                vibrateGamepad(800, 1.0, 1.0);
+            });
+            
+            // Sayfa üzerinde herhangi bir yere tıklayınca tarama yap
+            document.addEventListener('click', () => {
+                if (!gamepad) {
+                    scanForGamepads();
+                }
+            });
+            
+            // Herhangi bir tuşa basınca tarama yap
+            document.addEventListener('keydown', () => {
+                if (!gamepad) {
+                    scanForGamepads();
+                }
+            });
+            
+            // Gamepad butonlarına basınca tetikleme için
+            window.addEventListener('gamepadbuttondown', () => {
+                if (!gamepad) {
+                    scanForGamepads();
+                }
+            });
+        }
+
+        // Periyodik tarama
+        function startPeriodicScan() {
+            setInterval(() => {
+                if (!gamepad) {
+                    scanForGamepads();
+                } else {
+                    // Gamepad hala bağlı mı kontrol et
+                    const gamepads = navigator.getGamepads();
+                    let stillConnected = false;
+                    
+                    for (const gp of gamepads) {
+                        if (gp && gp.index === gamepad.index) {
+                            stillConnected = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!stillConnected) {
+                        disconnectGamepad();
+                    }
+                }
+            }, 2000); // Her 2 saniyede bir kontrol et
+        }
+
+        // Uygulama başlangıcı
+        function init() {
+            logToConsole("Gamepad Tester başlatılıyor...", "info");
+            
+            // Tarayıcı ve API kontrolü
+            detectBrowser();
+            const apiAvailable = checkGamepadAPI();
+            
+            if (!apiAvailable) {
+                logToConsole("Gamepad API desteklenmiyor. Chrome veya Firefox kullanın.", "error");
+                troubleshootingSection.classList.add('show');
+                return;
+            }
+            
+            logToConsole("Gamepad API mevcut", "info");
+            
+            // Event listener'ları kur
+            setupEventListeners();
+            
+            // Periyodik taramayı başlat
+            startPeriodicScan();
+            
+            // İlk taramayı yap
+            setTimeout(() => {
+                scanForGamepads();
+            }, 500);
+            
+            logToConsole("Gamepad Tester hazır. Bir gamepad bağlayın ve herhangi bir butona basın.", "info");
+        }
+
+        // Sayfa yüklendiğinde başlat
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
